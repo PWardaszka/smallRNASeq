@@ -1,0 +1,22 @@
+# VS Code
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dotenv (tajne dane)
+.env
+*.env
+
+# Dane lokalne (opcjonalnie)
+data/
+*.csv
+*.xlsx
