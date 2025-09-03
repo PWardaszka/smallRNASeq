@@ -1,6 +1,6 @@
 import pandas as pd
 
-# Ścieżka do Twojego pliku Excel
+# Ścieżka do pliku Excel
 excel_path = "C:\\Users\\patry\\OneDrive\Dokumenty\\smallRNASeq\\data\\Supplemental_Table2 (1).xlsx"
 
 # Wczytanie konkretnego arkusza
