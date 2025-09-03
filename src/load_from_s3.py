@@ -18,4 +18,4 @@ body = csv_obj['Body'].read().decode('utf-8')
 df = pd.read_csv(StringIO(body))
 
 # 4. Wyświetl pierwsze 5 wierszy
-print(df.head())
+print(body.splitlines()[:20])
