@@ -1,58 +1,48 @@
-import os
 import pandas as pd
-import matplotlib.pyplot as plt
 import boto3
 from io import StringIO
-from dotenv import load_dotenv
+import matplotlib.pyplot as plt
 
-# === 1. Wczytanie zmiennych środowiskowych (.env) ===
-load_dotenv()
-
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")  # jeśli nie masz, ustawi domyślny region
-
-# === 2. Dane S3 ===
-bucket_name = 'tsmall-rna'
+bucket_name = 'small-rna'
 object_key = 'differential_isomir_expression.csv'
 
-# === 3. Pobranie danych z S3 ===
-s3 = boto3.client(
-    's3',
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION
-)
+s3 = boto3.client('s3')
+csv_obj = s3.get_object(Bucket=bucket_name, Key=object_key)
+body = csv_obj['Body'].read().decode('utf-8')
 
-# Wczytaj plik CSV jako string
-obj = s3.get_object(Bucket=bucket_name, Key=object_key)
-csv_data = obj['Body'].read().decode('utf-8')
+# Pomijamy dwa pierwsze wiersze, bo to tytuły
+# header=0 oznacza, że wiersz 3 (indeks 2) jest nagłówkiem
+df = pd.read_csv(StringIO(body), skiprows=2, header=0)
 
-# Przekonwertuj na DataFrame
-df = pd.read_csv(StringIO(csv_data))
+# Usuwamy ewentualne spacje w nazwach kolumn
+df.columns = df.columns.str.strip()
 
-# === 4. Liczenie kategorii ===
-category_counts = df['category'].value_counts()
+print("Nagłówki kolumn:")
+print(df.columns)
 
-# Opcjonalnie: ładniejsze etykiety
-labels = {
-    'trimmed': 'przycięte',
-    'ambiguous tail': 'niejednoznaczny ogon',
-    'NT tail': 'ogonek NT',
-    'canonical': 'kanoniczne'
-}
-category_counts.rename(index=labels, inplace=True)
+print("\nPierwsze 5 wierszy:")
+print(df.head())
 
-# === 5. Tworzenie wykresu kołowego ===
-plt.style.use('seaborn-pastel')
+if 'category' in df.columns:
+    category_counts = df['category'].value_counts()
 
-category_counts.plot.pie(
-    autopct='%1.1f%%',
-    startangle=90,
-    figsize=(6, 6),
-    ylabel='',
-    title='Udział kategorii miRNA (category)'
-)
+    labels = {
+        'trimmed': 'przycięte',
+        'ambiguous tail': 'niejednoznaczny ogon',
+        'NT tail': 'ogonek NT',
+        'canonical': 'kanoniczne'
+    }
+    category_counts.rename(index=labels, inplace=True)
 
-plt.tight_layout()
-plt.show()
+    plt.style.use('seaborn-v0_8-pastel')
+    category_counts.plot.pie(
+        autopct='%1.1f%%',
+        startangle=90,
+        figsize=(6, 6),
+        ylabel='',
+        title='Udział kategorii miRNA (category)'
+    )
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Kolumna 'category' nie istnieje w dataframe.")
